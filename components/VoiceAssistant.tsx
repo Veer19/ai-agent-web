@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { Mic, MicOff, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import WaveForm from "./WaveForm";
 
-export default function VoiceAssistant() {
+const VoiceAssistant = () => {
 	const [pastConversations, setPastConversations] = useState<
 		{ question: string; answer: string }[]
 	>([]);
@@ -14,7 +15,6 @@ export default function VoiceAssistant() {
 		Array(20).fill(3)
 	);
 	const [isLoading, setIsLoading] = useState(false);
-	const [aiResponse, setAiResponse] = useState("");
 	const [isSpeaking, setIsSpeaking] = useState(false);
 
 	// Audio recording references
@@ -84,7 +84,6 @@ export default function VoiceAssistant() {
 
 			mediaRecorder.start();
 			setIsRecording(true);
-			setAiResponse("");
 		} catch (error) {
 			console.error("Error accessing microphone:", error);
 		}
@@ -144,7 +143,6 @@ export default function VoiceAssistant() {
 									},
 								];
 							});
-							setAiResponse(data.answer);
 
 							// Speak the response
 							if (speechSynthesisRef.current) {
@@ -156,9 +154,6 @@ export default function VoiceAssistant() {
 						} catch (error) {
 							console.error("Error sending audio to API:", error);
 							setIsLoading(false);
-							setAiResponse(
-								"Sorry, I encountered an error processing your request."
-							);
 						}
 					}
 				};
@@ -244,46 +239,25 @@ export default function VoiceAssistant() {
 						? "bg-red-500 hover:bg-red-600 animate-pulse"
 						: isSpeaking
 						? "bg-blue-500 hover:bg-blue-600 animate-pulse"
-						: "bg-primary hover:bg-primary/90"
+						: "bg-black hover:bg-black/90"
 				)}
 				disabled={isLoading}
 			>
 				{isRecording ? (
-					<MicOff size={64} className="text-white" />
+					<MicOff className="text-white" />
 				) : isSpeaking ? (
-					<Volume2 size={64} className="text-white" />
+					<Volume2 className="text-white" />
 				) : (
-					<Mic size={64} className="text-white" />
+					<Mic className="text-white" />
 				)}
 			</Button>
 
 			{/* Waveform visualization */}
-			<div className="w-full h-20 flex items-center justify-center">
-				<div className="flex items-center justify-center w-full h-full gap-1">
-					{waveformData.map((height, index) => (
-						<div
-							key={index}
-							className={cn(
-								"w-1 rounded-full transition-all duration-100",
-								isRecording
-									? "bg-primary"
-									: isSpeaking
-									? "bg-blue-500"
-									: "bg-gray-300 dark:bg-gray-700"
-							)}
-							style={{
-								height: `${height}px`,
-								opacity: isRecording || isSpeaking ? 1 : 0.5,
-								transform: `scaleY(${
-									isRecording || isSpeaking
-										? height / 10
-										: 0.3
-								})`,
-							}}
-						/>
-					))}
-				</div>
-			</div>
+			<WaveForm
+				waveformData={waveformData}
+				isRecording={isRecording}
+				isSpeaking={isSpeaking}
+			/>
 
 			<p className="text-3xl text-muted-foreground text-center">
 				{isRecording
@@ -296,4 +270,6 @@ export default function VoiceAssistant() {
 			</p>
 		</div>
 	);
-}
+};
+
+export default VoiceAssistant;
